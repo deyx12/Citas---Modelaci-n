@@ -887,3 +887,17 @@ select:focus {
     justify-items: center;
   }
 }
+
+.portal-content { border: 0; margin: 0; padding: 0; min-width: 0; }
+button:disabled { cursor: not-allowed; opacity: .45; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--primary-hover); outline-offset: 4px; }
+.field-error { color: var(--danger); font-weight: 500; }
+[aria-invalid="true"] { border-color: var(--danger); }
+.error-banner, .notice { padding: 16px; margin: 0 0 24px; border-radius: 8px; }
+.error-banner { background: var(--danger-soft); color: var(--danger); }
+.notice { background: var(--mint-soft); color: var(--success); }
+.appointment-list { display: grid; gap: 16px; margin: 24px 0; }
+dialog.modal-card { border: 0; }
+dialog::backdrop { background: rgba(27, 28, 28, .4); }
+.slot-grid { margin-top: 20px; }
+@media (max-width: 980px) { .topnav.menu-open { display: flex; position: absolute; top: 76px; left: 0; right: 0; background: var(--surface); padding: 16px; box-shadow: var(--shadow); flex-wrap: wrap; } }

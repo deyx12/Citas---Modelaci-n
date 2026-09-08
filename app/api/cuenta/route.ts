@@ -1,5 +1,1 @@
-import { NextResponse } from "next/server";
-
-export function GET() {
-  return NextResponse.json({ data: null });
-}
+export { GET } from "../portal/route";

@@ -1,3 +1,3 @@
-export default function LoginPage() {
-  return <main>Inicio de sesion</main>;
-}
+import PatientPortal from "@/components/patient-portal";
+
+export default function Page() { return <PatientPortal initialStep="identify" />; }

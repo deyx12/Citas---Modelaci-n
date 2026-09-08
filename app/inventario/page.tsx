@@ -1,3 +1,3 @@
-export default function InventarioPage() {
-  return <main>Agenda medica</main>;
-}
+import PatientPortal from "@/components/patient-portal";
+
+export default function Page() { return <PatientPortal initialStep="specialty" />; }

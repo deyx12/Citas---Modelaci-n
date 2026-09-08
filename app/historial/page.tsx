@@ -1,3 +1,3 @@
-export default function HistorialPage() {
-  return <main>Historial de citas</main>;
-}
+import PatientPortal from "@/components/patient-portal";
+
+export default function Page() { return <PatientPortal initialStep="lookup" />; }

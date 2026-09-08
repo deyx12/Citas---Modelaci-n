@@ -1,3 +1,3 @@
-export default function DashboardPage() {
-  return <main>Panel de citas</main>;
-}
+import PatientPortal from "@/components/patient-portal";
+
+export default function Page() { return <PatientPortal initialStep="reports" />; }

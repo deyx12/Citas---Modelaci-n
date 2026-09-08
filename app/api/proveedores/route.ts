@@ -1,5 +1,2 @@
-import { NextResponse } from "next/server";
-
-export function GET() {
-  return NextResponse.json({ data: [] });
-}
+import { doctors } from "@/lib/clinic";
+export function GET() { return Response.json({ data: doctors }); }

@@ -1,3 +1,3 @@
-export default function VentasPage() {
-  return <main>Gestion de citas</main>;
-}
+import PatientPortal from "@/components/patient-portal";
+
+export default function Page() { return <PatientPortal initialStep="lookup" />; }

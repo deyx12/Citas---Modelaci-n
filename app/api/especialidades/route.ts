@@ -1,7 +1,2 @@
-import { NextResponse } from "next/server";
-
-export function GET() {
-  return NextResponse.json({
-    data: ["Medicina General", "Pediatria", "Cardiologia", "Dermatologia", "Odontologia"]
-  });
-}
+import { specialties } from "@/lib/clinic";
+export function GET() { return Response.json({ data: specialties }); }
