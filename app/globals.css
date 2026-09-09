@@ -132,6 +132,29 @@ a {
   background: var(--primary-hover);
 }
 
+.account-avatar {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: var(--shadow);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.account-avatar:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
 .primary-button.compact {
   border-radius: 8px;
   padding: 0 42px;
