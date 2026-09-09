@@ -77,6 +77,10 @@ test("API protege datos, valida y evita doble reserva simultánea", async ({ pla
     const winner = results[0].ok() ? first : second;
     const other = winner === first ? second : first;
     const appointment = (await results.find(r => r.ok())!.json()).data;
+    const later = new Date(future.getTime() + 7 * 86400000);
+    const duplicateSpecialty = await winner.post("/api/portal", { data: { ...data, date: clinicDate(later), time: "11:00" } });
+    expect(duplicateSpecialty.status()).toBe(409);
+    expect((await duplicateSpecialty.json()).error).toContain("Ya tiene una cita activa");
     expect((await other.post("/api/portal", { data: { action: "cancel", id: appointment.id } })).status()).toBe(404);
     expect((await first.post("/api/portal", { data: { ...data, date: "2020-01-01" } })).status()).toBe(409);
     expect((await winner.post("/api/portal", { data: { action: "cancel", id: appointment.id } })).status()).toBe(200);

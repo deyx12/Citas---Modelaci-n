@@ -92,10 +92,19 @@ export async function saveAppointment(patientId: string, input: { specialty: str
   const sql = database();
   try {
     return await sql.begin(async tx => {
-      // Serialize destination slots, including automatic doctor selection.
-      // Unique indexes also protect both the doctor's and patient's agenda.
+      // Serialize bookings per patient and specialty so concurrent requests cannot
+      // create two active appointments for the same kind of care.
+      await tx`SELECT pg_advisory_xact_lock(hashtextextended(${`clinic-specialty:${patientId}:${input.specialty}`}, 0))`;
       await tx`SELECT pg_advisory_xact_lock(hashtextextended(${`clinic-slot:${input.date}:${input.time}`}, 0))`;
       if (input.id) await mutableAppointment(tx, patientId, input.id);
+      const active = await tx<Appointment[]>`SELECT * FROM ${tx(table("appointments"))}
+        WHERE "patientId" = ${patientId}
+          AND specialty = ${input.specialty}
+          AND status != 'CANCELADA'
+          AND id::text != ${input.id || ""}`;
+      if (active.some(appointment => new Date(`${appointment.date}T${appointment.time}:00-05:00`).getTime() > Date.now())) {
+        throw new ClinicError(`Ya tiene una cita activa de ${input.specialty}. Debe cancelarla o asistir antes de agendar otra.`, 409);
+      }
       const slot = (await availableSlots(tx, patientId, input.specialty, input.doctorId, input.date, input.id)).find(s => s.time === input.time && s.available);
       if (!slot?.doctorId) throw new ClinicError("El horario ya no está disponible. Seleccione otro.", 409);
       if (input.id) {
