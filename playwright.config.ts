@@ -15,7 +15,6 @@ export default defineConfig({
   webServer: {
     command: "npm run dev -- --port 3100",
     url: "http://127.0.0.1:3100",
-    env: { CLINIC_DB_PATH: "data/clinic-e2e.sqlite" },
     reuseExistingServer: false
   }
 });

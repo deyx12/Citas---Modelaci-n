@@ -8,7 +8,6 @@ Requiere Node.js 24 y la conexión PostgreSQL de Supabase en `.env`.
 
 ```bash
 npm install
-npm run db:setup
 npm run dev
 ```
 
@@ -18,13 +17,13 @@ Abra http://localhost:3000 y seleccione **Registrar paciente**. Cree una cuenta 
 
 Configure `DATABASE_URL` con la conexión **Transaction pooler** del panel **Connect** de Supabase. La contraseña de la base debe estar codificada para una URL. El servidor verifica TLS usando `certs/supabase-ca.crt`; si cambia el certificado, puede indicar `DATABASE_SSL_CA_PATH`. Nunca use una variable `NEXT_PUBLIC_` para la conexión PostgreSQL.
 
-`npm run db:setup` aplica `database/migrations/001_clinic.sql` de forma transaccional e idempotente: crea la estructura sin borrar ni importar registros. En Supabase Table Editor seleccione el esquema `clinic` para ver las tablas `patients`, `sessions`, `appointments` y `attempts`.
+En Supabase Table Editor seleccione el esquema `clinic` para ver las tablas activas: `patients`, `sessions`, `appointments` y `attempts`.
 
 La integración comienza sin pacientes ni citas. El archivo anterior `data/clinic.sqlite` se conserva y no se importa. Las cuentas anteriores de SQLite no dan acceso al portal conectado a Supabase: debe registrar una cuenta nueva.
 
 La autenticación conserva el acceso con documento y contraseña del portal. Las contraseñas se guardan con scrypt y las sesiones mediante hashes; no se usa Supabase Auth. El navegador accede a `/api/portal`, que verifica la sesión y la propiedad de cada cita. Las tablas tienen RLS habilitado y no conceden acceso a los roles de API `anon` o `authenticated`. La conexión del servidor realiza las operaciones con transacciones, bloqueos e índices únicos para evitar reservas duplicadas.
 
-Los archivos anteriores de Prisma y los clientes de Supabase Auth permanecen como referencias; no forman parte del almacenamiento activo del portal. No ejecute `db:migrate`, `db:deploy` ni `db:seed` para preparar este portal: use `db:setup`. La conexión activa utiliza Postgres.js y no necesita `SUPABASE_SERVICE_ROLE_KEY`. En producción la cookie requiere HTTPS. Las credenciales van en `.env` local o en las variables privadas del proveedor de alojamiento.
+La conexión activa utiliza Postgres.js directamente y no necesita Supabase Auth ni una clave `SUPABASE_SERVICE_ROLE_KEY`. En producción la cookie requiere HTTPS. Las credenciales van en `.env` local o en las variables privadas del proveedor de alojamiento.
 
 ## Funcionalidades
 
@@ -45,19 +44,16 @@ Las rutas del portal usan nombres clínicos: `/acceso`, `/perfil`, `/citas`, `/a
 ```bash
 npx tsc --noEmit
 npx vitest run
-npm run db:test
 npm run build
 npx playwright install chromium
-npm run test:e2e
+npx playwright test
 ```
 
 En Windows puede usar Microsoft Edge ya instalado:
 
 ```powershell
 $env:PLAYWRIGHT_CHANNEL = 'msedge'
-npm run test:e2e
+npx playwright test
 ```
 
-`npm run db:test` verifica contra Supabase las sesiones, los límites de acceso, la privacidad y los conflictos de reservas. `npm run test:e2e` comprueba el flujo del navegador y la API. Ambos crean un esquema `clinic_test_*` exclusivo por ejecución y lo eliminan al finalizar; no escriben en `clinic`. Requieren la conexión PostgreSQL y permisos para crear esquemas. Si se termina el proceso a la fuerza, podría quedar un esquema temporal que debe revisarse antes de eliminarlo.
-
-Playwright inicia un servidor independiente en el puerto 3100 y utiliza `.next-e2e` para no interferir con el servidor de desarrollo. Ejecute las pruebas mediante `npm run test:e2e`, que prepara y limpia el esquema temporal.
+Playwright comprueba el flujo del navegador y la API utilizando la conexión PostgreSQL configurada. Inicia un servidor independiente en el puerto 3100.
