@@ -26,6 +26,10 @@ test("registro, calendario, persistencia, reprogramación y cancelación", async
   await page.getByRole("button", { name: "Confirmar cita", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Tu cita fue agendada correctamente" })).toBeVisible();
   const code = await page.locator(".summary-header p").innerText();
+  await page.getByRole("button", { name: "Especialidades", exact: true }).click();
+  await page.getByRole("button", { name: "Medicina General", exact: true }).click();
+  await expect(page.locator(".error-banner")).toContainText("Ya tiene una cita activa de Medicina General");
+  await expect(page.getByRole("heading", { name: "Seleccione una Especialidad" })).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: "Citas", exact: true }).click();
   await page.locator(".appointment-list button").filter({ hasText: code.replace("Código de cita: ", "") }).click();

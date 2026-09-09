@@ -70,6 +70,19 @@ export default function PatientPortal({ initialStep = "home" }: Props) {
     else if (["lookup", "account", "reports"].includes(target) && !patient) { setNext(target); setStep("identify"); }
     else setStep(target);
   }
+  function hasActiveSpecialty(value: string) {
+    return items.some(appointment => appointment.specialty === value && appointment.status !== "CANCELADA" && new Date(`${appointment.date}T${appointment.time}:00-05:00`).getTime() > Date.now());
+  }
+  function chooseSpecialty(value: string) {
+    setError(""); setNotice("");
+    if (patient && hasActiveSpecialty(value)) {
+      setError(`Ya tiene una cita activa de ${value}. Debe cancelarla o asistir antes de agendar otra.`);
+      return;
+    }
+    setSpecialty(value); setDoctorId(""); setDate("");
+    if (!patient) { setNext("doctor"); setStep("identify"); }
+    else setStep("doctor");
+  }
   async function run(action: () => Promise<void>) {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError(""); setNotice("");
@@ -87,7 +100,14 @@ export default function PatientPortal({ initialStep = "home" }: Props) {
     setFields({});
     void run(async () => {
       const p = await request<Patient>("/api/portal", { ...parsed.data, action: step === "register" ? "register" : "login" });
-      setPatient(p); await refresh(); setStep(next); setNotice("Sesión iniciada correctamente.");
+      const data = await request<{ patient: Patient | null; appointments: Appointment[] }>();
+      setPatient(p); setItems(data.appointments);
+      if (next === "doctor" && data.appointments.some(appointment => appointment.specialty === specialty && appointment.status !== "CANCELADA" && new Date(`${appointment.date}T${appointment.time}:00-05:00`).getTime() > Date.now())) {
+        setStep("specialty");
+        setError(`Ya tiene una cita activa de ${specialty}. Debe cancelarla o asistir antes de agendar otra.`);
+        return;
+      }
+      setStep(next); setNotice("Sesión iniciada correctamente.");
     });
   }
   const activeAppointment = selected && selected.status !== "CANCELADA" && new Date(`${selected.date}T${selected.time}:00-05:00`).getTime() > Date.now();
@@ -116,7 +136,7 @@ export default function PatientPortal({ initialStep = "home" }: Props) {
       {ready && <fieldset className="portal-content" disabled={busy}>
       {step === "home" ? <HomeScreen onNavigate={navigate} /> : <div className="flow-screen"><button className="back-button" type="button" onClick={back}><ArrowLeft size={20} />Volver</button><div className="page-heading"><h1>{title[step]}</h1></div>
       {(step === "identify" || step === "register") && <div className="form-card"><p>{step === "register" ? "Complete su información y cree una contraseña para gestionar sus citas." : "Ingrese con el documento y la contraseña de su registro."}</p><form onSubmit={authenticate} noValidate><label>Tipo de documento<select name="documentType" defaultValue="CC">{Object.entries(documentTypes).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>{field("documentNumber", "Número de documento")}{step === "register" && <>{field("firstName", "Nombres")}{field("lastName", "Apellidos")}{field("birthDate", "Fecha de nacimiento", "date")}{field("phone", "Teléfono", "tel")}{field("email", "Correo electrónico", "email")}</>}{field("password", "Contraseña", "password")}<button className="primary-button" type="submit">{step === "register" ? "Registrarme y continuar" : "Continuar"}</button>{step === "identify" && <button className="text-button" type="button" onClick={() => navigate("register")}>Soy nuevo paciente, registrarme</button>}</form></div>}
-      {step === "specialty" && <div className="choice-grid">{specialties.map(s => <button className="choice-card" key={s} onClick={() => { setSpecialty(s); setDoctorId(""); setDate(""); if (!patient) { setNext("doctor"); setStep("identify"); } else setStep("doctor"); }}><span className="choice-icon"><Stethoscope /></span><strong>{s}</strong></button>)}</div>}
+      {step === "specialty" && <div className="choice-grid">{specialties.map(s => <button className="choice-card" key={s} onClick={() => chooseSpecialty(s)}><span className="choice-icon"><Stethoscope /></span><strong>{s}</strong></button>)}</div>}
       {step === "professionals" && <div className="doctor-grid">{doctors.map(d => <button className="doctor-card" key={d.id} onClick={() => { setSpecialty(d.specialty); setDoctorId(d.id); setDate(""); setTime(""); setEditing(false); if (patient) setStep("schedule"); else { setNext("schedule"); setStep("identify"); } }}><Stethoscope /><span><strong>{d.name}</strong><small>{d.specialty}</small><small>Ver disponibilidad</small></span></button>)}</div>}
       {step === "doctor" && <><p>{specialty}</p><div className="doctor-grid">{[{ id: "", name: "Cualquier profesional disponible", specialty }, ...doctors.filter(d => d.specialty === specialty)].map(d => <button className="doctor-card" key={d.id} onClick={() => { setDoctorId(d.id); setDate(""); setTime(""); setStep("schedule"); }}><Stethoscope /><span><strong>{d.name}</strong><small>{d.specialty}</small><small>Lunes a viernes</small></span></button>)}</div></>}
       {step === "schedule" && <><p>{specialty} · {doctors.find(d => d.id === doctorId)?.name || "Asignación automática"}</p><div className="schedule-grid">{month && calendar()}<article className="panel-card"><h2 className="panel-title">Horarios disponibles<small>{date ? dateLabel(date) : "Seleccione un día en el calendario"}</small></h2>{loadingSlots ? <p role="status">Consultando disponibilidad…</p> : <><div className="slot-grid">{slots.map(s => <button className={`time-slot ${time === s.time ? "selected" : ""}`} key={s.time} disabled={!s.available} aria-pressed={time === s.time} onClick={() => setTime(s.time)}>{s.time}{!s.available ? " · No disponible" : ""}</button>)}</div>{date && !slots.some(s => s.available) && <p>No hay horarios disponibles. Seleccione otro día.</p>}</>}{time && <p className="selected-summary">Seleccionó {dateLabel(date)} a las {time}.</p>}</article></div><div className="flow-actions"><button className="secondary-button" onClick={back}>Volver</button><button className="primary-button compact" disabled={!time || loadingSlots} onClick={() => setStep("confirm")}>Continuar</button></div></>}
