@@ -2,17 +2,21 @@
   "name": "portal-citas-clinica-belen",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": ">=24.0.0" },
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
     "test": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "tsx scripts/test-e2e.ts",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:setup": "tsx scripts/db-setup.ts",
+    "db:test": "tsx scripts/db-test.ts"
   },
   "dependencies": {
     "@prisma/client": "^7.0.0",
@@ -21,6 +25,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
     "next": "^16.0.0",
+    "postgres": "^3.4.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.5.0",

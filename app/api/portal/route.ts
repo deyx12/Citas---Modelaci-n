@@ -15,13 +15,13 @@ function error(e: unknown) {
 }
 export async function GET(request: NextRequest) {
   try {
-    const patient = store.currentPatient(request.cookies.get(cookie)?.value || "");
+    const patient = await store.currentPatient(request.cookies.get(cookie)?.value || "");
     if (request.nextUrl.searchParams.get("action") === "availability") {
       if (!patient) throw new store.ClinicError("Inicie sesión para ver la agenda.", 401);
       const p = request.nextUrl.searchParams;
-      return result(store.availability(patient.id, p.get("specialty") || "", p.get("doctorId") || "", p.get("date") || "", p.get("exclude") || ""));
+      return result(await store.availability(patient.id, p.get("specialty") || "", p.get("doctorId") || "", p.get("date") || "", p.get("exclude") || ""));
     }
-    return result({ patient, appointments: patient ? store.appointments(patient.id) : [], specialties, doctors });
+    return result({ patient, appointments: patient ? await store.appointments(patient.id) : [], specialties, doctors });
   } catch (e) { return error(e); }
 }
 export async function POST(request: NextRequest) {
@@ -30,21 +30,21 @@ export async function POST(request: NextRequest) {
     if (!origin || !/^https?:\/\//.test(origin) || new URL(origin).host !== request.headers.get("host")) throw new store.ClinicError("Origen de solicitud inválido.", 403);
     const body = z.object({ action: z.enum(["register", "login", "logout", "book", "confirm", "cancel"]) }).passthrough().parse(await request.json());
     if (body.action === "register" || body.action === "login") {
-      const patient = body.action === "register" ? store.register(registrationSchema.parse(body)) : store.login(identitySchema.parse(body));
+      const patient = body.action === "register" ? await store.register(registrationSchema.parse(body)) : await store.login(identitySchema.parse(body));
       const response = result(patient);
-      store.logout(request.cookies.get(cookie)?.value || "");
-      response.cookies.set(cookie, store.session(patient.id), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 8 * 3600 });
+      await store.logout(request.cookies.get(cookie)?.value || "");
+      response.cookies.set(cookie, await store.session(patient.id), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 8 * 3600 });
       return response;
     }
     const token = request.cookies.get(cookie)?.value || "";
-    const patient = store.currentPatient(token);
+    const patient = await store.currentPatient(token);
     if (!patient) throw new store.ClinicError("Su sesión terminó. Inicie sesión nuevamente.", 401);
-    if (body.action === "logout") { store.logout(token); const response = result(null); response.cookies.delete(cookie); return response; }
+    if (body.action === "logout") { await store.logout(token); const response = result(null); response.cookies.delete(cookie); return response; }
     if (body.action === "book") {
       const input = bookingSchema.parse(body);
-      return result(store.saveAppointment(patient.id, input));
+      return result(await store.saveAppointment(patient.id, input));
     }
     const input = z.object({ id: z.string().uuid(), action: z.enum(["confirm", "cancel"]) }).parse(body);
-    return result(store.changeStatus(patient.id, input.id, input.action === "confirm" ? "CONFIRMADA" : "CANCELADA"));
+    return result(await store.changeStatus(patient.id, input.id, input.action === "confirm" ? "CONFIRMADA" : "CANCELADA"));
   } catch (e) { return error(e); }
 }
