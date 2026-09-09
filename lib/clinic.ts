@@ -25,7 +25,9 @@ export const doctors = [
   { id: "dermatologia-1", name: "Dra. Paula Rodríguez", specialty: specialties[3] },
   { id: "odontologia-1", name: "Dr. Carlos Ruiz", specialty: specialties[4] }
 ];
-export const hours = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
+export const weekdayHours = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
+export const saturdayHours = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30"];
+export const hours = [...new Set([...weekdayHours, ...saturdayHours])];
 export const bookingSchema = z.object({
   specialty: z.string().refine(value => specialties.includes(value), "Seleccione una especialidad válida."),
   doctorId: z.string(),
@@ -36,9 +38,14 @@ export const bookingSchema = z.object({
 export function validSlot(date: string, time: string, now = new Date()) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !hours.includes(time)) return false;
   const day = new Date(`${date}T12:00:00-05:00`);
-  if (Number.isNaN(day.getTime()) || day.toISOString().slice(0, 10) !== date || [0, 6].includes(day.getUTCDay())) return false;
+  if (Number.isNaN(day.getTime()) || day.toISOString().slice(0, 10) !== date || day.getUTCDay() === 0) return false;
+  if (!(day.getUTCDay() === 6 ? saturdayHours : weekdayHours).includes(time)) return false;
   const startsAt = new Date(`${date}T${time}:00-05:00`).getTime();
   return startsAt > now.getTime() && startsAt <= now.getTime() + 180 * 86400000;
+}
+export function hoursForDate(date: string) {
+  const day = new Date(`${date}T12:00:00-05:00`);
+  return day.getUTCDay() === 6 ? saturdayHours : weekdayHours;
 }
 export type Patient = { id: string; documentType: string; documentNumber: string; firstName: string; lastName: string; birthDate: string; phone: string; email: string };
 export type Appointment = { id: string; code: string; patientId: string; specialty: string; doctorId: string; date: string; time: string; status: "PENDIENTE" | "CONFIRMADA" | "CANCELADA" };

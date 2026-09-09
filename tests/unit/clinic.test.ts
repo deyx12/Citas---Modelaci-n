@@ -13,5 +13,6 @@ describe("validaciones del paciente", () => {
 describe("agenda en hora de Colombia", () => {
   const now = new Date("2026-09-08T13:15:00Z");
   it("acepta el siguiente horario del día", () => expect(validSlot("2026-09-08", "08:30", now)).toBe(true));
-  it.each([["2026-09-08", "08:00"], ["2026-09-12", "10:00"], ["2026-09-13", "10:00"], ["2026-09-09", "12:00"], ["2026-09-31", "10:00"], ["2027-09-09", "10:00"], ["invalid", "10:00"]])("rechaza %s %s", (date, time) => expect(validSlot(date, time, now)).toBe(false));
+  it.each([["2026-09-12", "10:00"], ["2026-09-12", "13:30"]])("acepta el sábado %s a las %s", (date, time) => expect(validSlot(date, time, now)).toBe(true));
+  it.each([["2026-09-08", "08:00"], ["2026-09-12", "14:00"], ["2026-09-13", "10:00"], ["2026-09-09", "12:00"], ["2026-09-31", "10:00"], ["2027-09-09", "10:00"], ["invalid", "10:00"]])("rechaza %s %s", (date, time) => expect(validSlot(date, time, now)).toBe(false));
 });

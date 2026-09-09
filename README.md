@@ -30,7 +30,7 @@ Los archivos anteriores de Prisma y los clientes de Supabase Auth permanecen com
 
 - Registro validado en cliente y servidor; documentos únicos, fechas de nacimiento reales, teléfono, correo y contraseña.
 - Acceso mediante documento y contraseña, sesión de ocho horas en cookie HttpOnly, cierre de sesión y límite de intentos de acceso.
-- Calendario navegable, semanas de lunes a domingo y disponibilidad consultada al servidor. Agenda de lunes a viernes, cada 30 minutos, 08:00–12:00 y 14:00–17:00, hasta 180 días; todas las horas corresponden a Colombia.
+- Calendario navegable, semanas de lunes a domingo y disponibilidad consultada al servidor. Agenda cada 30 minutos: lunes a viernes, 08:00–12:00 y 14:00–17:00; sábados, 08:00–14:00; hasta 180 días y en hora de Colombia.
 - Selección de profesional por especialidad o asignación automática.
 - Reserva persistente con código único, consulta y filtro por estado, confirmación de asistencia, reprogramación y cancelación con confirmación.
 - Transacciones y restricciones únicas para impedir reservar simultáneamente el mismo profesional o paciente. Cancelar libera el horario.

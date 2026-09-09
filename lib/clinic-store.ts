@@ -1,6 +1,6 @@
 ﻿import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from "node:crypto";
 import type postgres from "postgres";
-import { doctors, hours, validSlot, type Patient, type Appointment } from "./clinic";
+import { doctors, hoursForDate, validSlot, type Patient, type Appointment } from "./clinic";
 import { database, table } from "./clinic-db";
 
 export class ClinicError extends Error {
@@ -80,7 +80,7 @@ export async function appointments(patientId: string) {
 async function availableSlots(sql: Query, patientId: string, specialty: string, doctorId: string, date: string, exclude = "") {
   const candidates = doctors.filter(d => d.specialty === specialty && (!doctorId || d.id === doctorId));
   const booked = await sql<Appointment[]>`SELECT * FROM ${sql(table("appointments"))} WHERE date = ${date} AND status != 'CANCELADA' AND id::text != ${exclude}`;
-  return hours.map(time => {
+  return hoursForDate(date).map(time => {
     const doctor = validSlot(date, time) && !booked.some(a => a.patientId === patientId && a.time === time) ? candidates.find(d => !booked.some(a => a.doctorId === d.id && a.time === time)) : undefined;
     return { time, available: Boolean(doctor), doctorId: doctor?.id || null };
   });
