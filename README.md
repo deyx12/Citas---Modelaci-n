@@ -38,7 +38,7 @@ Los archivos anteriores de Prisma y los clientes de Supabase Auth permanecen com
 
 El catálogo de profesionales y el horario son datos de demostración definidos en `lib/clinic.ts`; deben reemplazarse por la agenda oficial antes de usar el portal con pacientes reales. No se envían correos ni SMS. No hay recuperación de contraseña ni administración de agendas por empleados.
 
-Las rutas heredadas se conectan al portal: `/login` acceso, `/cuenta` y `/usuarios` cuenta del paciente, `/historial` y `/ventas` consulta, `/productos` especialidades, `/proveedores` profesionales, `/inventario` inicio de agendamiento, `/reportes` y `/dashboard` resumen personal. No son paneles administrativos ni exponen datos de otros pacientes.
+Las rutas del portal usan nombres clínicos: `/acceso`, `/perfil`, `/citas`, `/agendar`, `/especialidades`, `/profesionales` y `/resumen`. Las direcciones antiguas redirigen a su equivalente para conservar enlaces existentes.
 
 ## Verificación
 

@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 test("rutas secundarias y menú móvil", async ({ page }) => {
-  for (const route of ["cuenta", "usuarios", "historial", "ventas", "reportes", "dashboard"]) {
+  for (const route of ["perfil", "citas", "resumen"]) {
     await page.goto(`/${route}`);
     await expect(page.getByRole("heading", { name: "Identificación del Paciente" })).toBeVisible();
   }
-  await page.goto("/proveedores");
+  await page.goto("/profesionales");
   await expect(page.getByRole("heading", { name: "Nuestros profesionales" })).toBeVisible();
   await expect(page.locator(".doctor-card")).toHaveCount(6);
   await page.setViewportSize({ width: 390, height: 844 });
