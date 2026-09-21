@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { registrationSchema, validSlot } from "@/lib/clinic";
+import { identitySchema, registrationSchema, validSlot } from "@/lib/clinic";
 
-const patient = { documentType: "CC", documentNumber: "1020304050", password: "PruebaSegura123", firstName: "Ana", lastName: "Gómez", birthDate: "1990-05-20", phone: "+57 3001234567", email: "ana@example.com" };
+const patient = { documentType: "CC", documentNumber: "1020304050", password: "PruebaSegura123", firstName: "Ana María", lastName: "Gómez López", birthDate: "1990-05-20", phone: "3001234567", email: "ana@example.com" };
 describe("validaciones del paciente", () => {
   it("acepta datos completos", () => expect(registrationSchema.safeParse(patient).success).toBe(true));
+  it("acepta letras y números en el pasaporte", () => expect(identitySchema.safeParse({ documentType: "PASAPORTE", documentNumber: "AB123456", password: "PruebaSegura123" }).success).toBe(true));
   it.each([
-    { firstName: "  " }, { lastName: " " }, { documentNumber: "123" }, { documentNumber: "12<>56" },
+    { firstName: "  " }, { firstName: "Ana2" }, { lastName: " " }, { lastName: "Gómez3" }, { documentNumber: "123" }, { documentNumber: "ABC123" }, { documentNumber: "12<>56" },
     { birthDate: "2025-02-30" }, { birthDate: "2099-01-01" }, { birthDate: "" },
-    { phone: "-------" }, { phone: "abc1234" }, { email: "invalido" }, { password: "123" }
+    { phone: "300123456" }, { phone: "30012345678" }, { phone: "300 1234567" }, { phone: "abcdefghij" }, { email: "invalido" }, { password: "123" }
   ])("rechaza datos inválidos %j", value => expect(registrationSchema.safeParse({ ...patient, ...value }).success).toBe(false));
+  it("rechaza DNI", () => expect(identitySchema.safeParse({ documentType: "DNI", documentNumber: "12345678", password: "PruebaSegura123" }).success).toBe(false));
 });
 describe("agenda en hora de Colombia", () => {
   const now = new Date("2026-09-08T13:15:00Z");

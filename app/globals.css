@@ -916,11 +916,52 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 button:focus-visible, a:focus-visible { outline: 3px solid var(--primary-hover); outline-offset: 4px; }
 .field-error { color: var(--danger); font-weight: 500; }
 [aria-invalid="true"] { border-color: var(--danger); }
-.error-banner, .notice { padding: 16px; margin: 0 0 24px; border-radius: 8px; }
-.error-banner { background: var(--danger-soft); color: var(--danger); }
-.notice { background: var(--mint-soft); color: var(--success); }
 .appointment-list { display: grid; gap: 16px; margin: 24px 0; }
 dialog.modal-card { border: 0; }
 dialog::backdrop { background: rgba(27, 28, 28, .4); }
+.message-modal {
+  position: relative;
+  text-align: center;
+}
+.message-modal h2 {
+  margin: 18px 0 10px;
+  font-size: 26px;
+}
+.message-modal-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+}
+.message-modal-icon svg { width: 34px; height: 34px; }
+.message-modal.error .message-modal-icon { background: var(--danger-soft); color: var(--danger); }
+.message-modal.success .message-modal-icon { background: var(--mint-soft); color: var(--success); }
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+}
+.modal-close:hover { background: var(--surface-strong); color: var(--text); }
+.modal-actions {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.modal-actions .compact { min-width: 140px; }
 .slot-grid { margin-top: 20px; }
-@media (max-width: 980px) { .topnav.menu-open { display: flex; position: absolute; top: 76px; left: 0; right: 0; background: var(--surface); padding: 16px; box-shadow: var(--shadow); flex-wrap: wrap; } }
+@media (max-width: 980px) {
+  .topnav.menu-open { display: flex; position: absolute; top: 76px; left: 0; right: 0; background: var(--surface); padding: 16px; box-shadow: var(--shadow); flex-wrap: wrap; }
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions .compact { width: 100%; }
+}

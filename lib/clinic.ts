@@ -1,21 +1,26 @@
 import { z } from "zod";
 
-export const documentTypes = { CC: "Cédula de Ciudadanía", CE: "Cédula de Extranjería", TI: "Tarjeta de Identidad", PASAPORTE: "Pasaporte", DNI: "DNI" };
-export const identitySchema = z.object({
-  documentType: z.enum(["CC", "CE", "TI", "PASAPORTE", "DNI"]),
-  documentNumber: z.string().trim().regex(/^[a-zA-Z0-9]{4,20}$/, "Documento: ingrese entre 4 y 20 letras o números."),
+export const documentTypes = { CC: "Cédula de Ciudadanía", CE: "Cédula de Extranjería", TI: "Tarjeta de Identidad", PASAPORTE: "Pasaporte" };
+const identityFields = z.object({
+  documentType: z.enum(["CC", "CE", "TI", "PASAPORTE"]),
+  documentNumber: z.string().trim().min(4, "El número de documento debe tener entre 4 y 20 caracteres.").max(20, "El número de documento debe tener entre 4 y 20 caracteres."),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres.").max(128)
 });
+function validateDocument(data: z.infer<typeof identityFields>, context: z.RefinementCtx) {
+  const valid = data.documentType === "PASAPORTE" ? /^[a-zA-Z0-9]+$/.test(data.documentNumber) : /^\d+$/.test(data.documentNumber);
+  if (!valid) context.addIssue({ code: z.ZodIssueCode.custom, path: ["documentNumber"], message: data.documentType === "PASAPORTE" ? "El pasaporte solo puede contener letras y números." : "El número de documento solo puede contener números." });
+}
+export const identitySchema = identityFields.superRefine(validateDocument);
 export function clinicDate(now = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
-export const registrationSchema = identitySchema.extend({
-  firstName: z.string().trim().min(2, "Ingrese sus nombres.").max(80),
-  lastName: z.string().trim().min(2, "Ingrese sus apellidos.").max(80),
+export const registrationSchema = identityFields.extend({
+  firstName: z.string().trim().min(2, "Ingrese sus nombres.").max(80).regex(/^[\p{L} ]+$/u, "Los nombres solo pueden contener letras y espacios."),
+  lastName: z.string().trim().min(2, "Ingrese sus apellidos.").max(80).regex(/^[\p{L} ]+$/u, "Los apellidos solo pueden contener letras y espacios."),
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Ingrese su fecha de nacimiento.").refine(v => !Number.isNaN(Date.parse(v)) && new Date(v).toISOString().slice(0, 10) === v && v <= clinicDate() && v >= "1900-01-01", "La fecha de nacimiento no es válida."),
-  phone: z.string().trim().regex(/^\+?[\d\s()-]{7,20}$/, "Ingrese un teléfono válido.").refine(v => v.replace(/\D/g, "").length >= 7, "Ingrese un teléfono válido."),
+  phone: z.string().trim().regex(/^\d{10}$/, "El celular debe tener exactamente 10 dígitos."),
   email: z.string().trim().email("Ingrese un correo válido.").max(160)
-});
+}).superRefine(validateDocument);
 export const specialties = ["Medicina General", "Pediatría", "Cardiología", "Dermatología", "Odontología"];
 export const doctors = [
   { id: "general-1", name: "Dr. Juan Pérez", specialty: specialties[0] },
