@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { clinicDate } from "../../lib/clinic";
 
 test("registro, calendario, persistencia, reprogramación y cancelación", async ({ page }) => {
-  const document = String(Date.now());
+  const document = String(Date.now()).slice(-10);
   await page.goto("/");
   await page.getByRole("button", { name: /Registrar paciente/ }).click();
   await page.getByRole("button", { name: "Registrarme y continuar" }).click();
@@ -86,13 +86,14 @@ test("API protege datos, valida y evita doble reserva simultánea", async ({ pla
   const first = await playwright.request.newContext({ baseURL: "http://127.0.0.1:3100", extraHTTPHeaders: { Origin: "http://127.0.0.1:3100" } });
   const second = await playwright.request.newContext({ baseURL: "http://127.0.0.1:3100", extraHTTPHeaders: { Origin: "http://127.0.0.1:3100" } });
   try {
-    const values = { action: "register", documentType: "CC", documentNumber: `${Date.now()}1`, firstName: "Prueba", lastName: "API", password: "PruebaSegura123", birthDate: "1990-01-01", phone: "3001234567", email: "api@example.com" };
+    const documentBase = String(Date.now()).slice(-9);
+    const values = { action: "register", documentType: "CC", documentNumber: `${documentBase}1`, firstName: "Prueba", lastName: "API", password: "PruebaSegura123", birthDate: "1990-01-01", phone: "3001234567", email: "api@example.com" };
     expect((await first.post("/api/portal", { data: { action: "book" } })).status()).toBe(401);
     expect((await first.post("/api/portal", { data: null })).status()).toBe(400);
     expect((await first.post("/api/portal", { data: values, headers: { Origin: "https://otro.example" } })).status()).toBe(403);
     expect((await first.post("/api/portal", { data: values })).status()).toBe(200);
     expect((await first.post("/api/portal", { data: values })).status()).toBe(409);
-    expect((await second.post("/api/portal", { data: { ...values, documentNumber: `${Date.now()}2` } })).status()).toBe(200);
+    expect((await second.post("/api/portal", { data: { ...values, documentNumber: `${documentBase}2` } })).status()).toBe(200);
     const future = new Date(Date.now() + 60 * 86400000);
     while ([0, 6].includes(new Date(`${clinicDate(future)}T12:00:00Z`).getUTCDay())) future.setDate(future.getDate() + 1);
     const data = { action: "book", specialty: "Cardiología", doctorId: "cardiologia-1", date: clinicDate(future), time: "10:00" };

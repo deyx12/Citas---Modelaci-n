@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, CalendarCheck, ChevronLeft, ChevronRight, Home, Menu, Stethoscope, UserRound } from "lucide-react";
+import { ArrowLeft, CalendarCheck, ChevronLeft, ChevronRight, Eye, EyeOff, Home, Menu, Stethoscope, UserRound } from "lucide-react";
 import HomeScreen from "./portal-home";
 import MessageModal from "./message-modal";
 import { clinicDate, doctors, documentTypes, identitySchema, registrationSchema, specialties, type Appointment, type Patient, type Slot } from "@/lib/clinic";
@@ -45,6 +45,7 @@ export default function PatientPortal({ initialStep = "home" }: Props) {
   const [next, setNext] = useState<PortalStep>("specialty");
   const [filter, setFilter] = useState<AppointmentFilter>("");
   const [documentType, setDocumentType] = useState<DocumentType>("CC");
+  const [showPassword, setShowPassword] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const lock = useRef(false);
   async function refresh() {
@@ -71,7 +72,7 @@ export default function PatientPortal({ initialStep = "home" }: Props) {
   }, [step]);
   function navigate(target: PortalStep) {
     if (busy) return;
-    setError(""); setNotice(null); setFields({}); setMenu(false);
+    setError(""); setNotice(null); setFields({}); setMenu(false); setShowPassword(false);
     if (target === "register" && step !== "identify") setNext("specialty");
     if (["identify", "specialty"].includes(target)) { setEditing(false); setSelected(null); setDate(""); setTime(""); }
     if (target === "identify") { setNext("specialty"); setStep(patient ? "specialty" : "identify"); }
@@ -129,7 +130,11 @@ export default function PatientPortal({ initialStep = "home" }: Props) {
     });
   }
   const title: Record<PortalStep, string> = { home: "", identify: "Identificación del Paciente", register: "Registro de Nuevo Paciente", specialty: "Seleccione una Especialidad", doctor: "Seleccione un Profesional", schedule: "Seleccione Fecha y Hora", confirm: "Confirmación de su Cita", scheduled: "Tu cita fue agendada correctamente", lookup: "Consultar mis Citas", detail: "Detalle de su Cita", contact: "Información de atención", account: "Mi cuenta", reports: "Resumen de mis citas", professionals: "Nuestros profesionales" };
-  const field = (name: string, label: string, type = "text") => <label key={name}>{label}<input aria-label={label} name={name} type={type} required autoComplete={name === "password" ? step === "register" ? "new-password" : "current-password" : undefined} inputMode={name === "documentNumber" ? documentType === "PASAPORTE" ? "text" : "numeric" : name === "phone" ? "numeric" : undefined} pattern={name === "documentNumber" ? documentType === "PASAPORTE" ? "[a-zA-Z0-9]+" : "[0-9]+" : name === "phone" ? "[0-9]{10}" : ["firstName", "lastName"].includes(name) ? "[\\p{L} ]+" : undefined} minLength={name === "documentNumber" ? 4 : name === "phone" ? 10 : undefined} maxLength={name === "password" ? 128 : name === "documentNumber" ? 20 : name === "phone" ? 10 : ["firstName", "lastName"].includes(name) ? 80 : 160} max={type === "date" ? clinicDate() : undefined} min={type === "date" ? "1900-01-01" : undefined} aria-invalid={Boolean(fields[name])} aria-describedby={fields[name] ? `${name}-error` : undefined} />{fields[name] && <span id={`${name}-error`} className="field-error">{fields[name]?.[0]}</span>}</label>;
+  const field = (name: string, label: string, type = "text") => {
+    const password = name === "password";
+    const input = <input aria-label={label} name={name} type={password ? showPassword ? "text" : "password" : type} required autoComplete={password ? step === "register" ? "new-password" : "current-password" : undefined} inputMode={name === "documentNumber" ? documentType === "PASAPORTE" ? "text" : "numeric" : name === "phone" ? "numeric" : undefined} pattern={name === "documentNumber" ? documentType === "PASAPORTE" ? "[a-zA-Z0-9]{4,12}" : "[0-9]{4,10}" : name === "phone" ? "[0-9]{10}" : ["firstName", "lastName"].includes(name) ? "[\\p{L} ]+" : undefined} minLength={name === "documentNumber" ? 4 : name === "phone" ? 10 : password ? 8 : undefined} maxLength={password ? 15 : name === "documentNumber" ? documentType === "PASAPORTE" ? 12 : 10 : name === "phone" ? 10 : ["firstName", "lastName"].includes(name) ? 22 : name === "email" ? 40 : 160} max={type === "date" ? clinicDate() : undefined} min={type === "date" ? "1900-01-01" : undefined} aria-invalid={Boolean(fields[name])} aria-describedby={fields[name] ? `${name}-error` : undefined} />;
+    return <label key={name}>{label}{password ? <span className="password-control">{input}<button className="password-toggle" type="button" aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}</button></span> : input}{fields[name] && <span id={`${name}-error`} className="field-error">{fields[name]?.[0]}</span>}</label>;
+  };
   const summary = (appointment?: Appointment) => <article className="summary-card"><div className="summary-header"><CalendarCheck /><div><h2>{appointment?.specialty || specialty}</h2><p>{appointment ? `Código de cita: ${appointment.code}` : "Revise sus datos antes de guardar."}</p></div></div><dl>{Object.entries({ Paciente: `${patient?.firstName || ""} ${patient?.lastName || ""}`, Profesional: doctors.find(d => d.id === (appointment?.doctorId || slots.find(s => s.time === time)?.doctorId || doctorId))?.name || "Asignación automática", Fecha: dateLabel(appointment?.date || date), Hora: `${appointment?.time || time} (Colombia)`, Estado: appointment?.status || "Por guardar" }).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="summary-action">Preséntese 15 minutos antes de la hora programada.</p></article>;
   const back = () => navigate(({ doctor: "specialty", schedule: editing ? "detail" : "doctor", confirm: "schedule", detail: "lookup", register: "identify" } as Partial<Record<PortalStep, PortalStep>>)[step] || "home");
   const calendar = () => {

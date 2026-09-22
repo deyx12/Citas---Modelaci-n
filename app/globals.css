@@ -695,6 +695,41 @@ select:focus {
   border-color: var(--primary);
 }
 
+.password-control {
+  position: relative;
+  display: block;
+}
+
+.password-control input {
+  padding-right: 58px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-strong);
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+  background: var(--surface-strong);
+  color: var(--primary);
+}
+
+.password-toggle svg {
+  width: 21px;
+  height: 21px;
+}
+
 .summary-card {
   max-width: 760px;
   padding: 28px;
